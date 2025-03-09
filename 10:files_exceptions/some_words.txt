@@ -1,3 +1,0 @@
-Im learning python.
-At the moment i've learned if statements, loops, lists, dictionaries, and file handling.
-
