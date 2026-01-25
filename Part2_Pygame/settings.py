@@ -7,3 +7,9 @@ class Settings:
         # Ship settings
         self.ship_speed_factor = 1.25
         self.ship_margin = 80  # Margin from screen edges
+
+        # Bullet settings
+        self.bullet_speed_factor = 1
+        self.bullet_width = 3
+        self.bullet_heigth = 15
+        self.bullet_color = 230, 230, 230
