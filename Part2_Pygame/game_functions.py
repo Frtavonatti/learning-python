@@ -5,7 +5,7 @@ from alien import Alien
 from bullet import Bullet
 
 
-def check_keydown_events(event, ai_settings, screen, ship, bullets):
+def check_keydown_events(event, settings, screen, ship, bullets):
     if event.key == pygame.K_RIGHT:
         ship.moving_right = True
     elif event.key == pygame.K_LEFT:
@@ -15,7 +15,7 @@ def check_keydown_events(event, ai_settings, screen, ship, bullets):
     elif event.key == pygame.K_DOWN:
         ship.moving_down = True
     elif event.key == pygame.K_SPACE:
-        fire_bullets(ai_settings, screen, ship, bullets)
+        fire_bullets(settings, screen, ship, bullets)
 
 
 def check_keyup_events(event, ship):
@@ -29,20 +29,20 @@ def check_keyup_events(event, ship):
         ship.moving_down = False
 
 
-def check_events(ai_settings, screen, ship, bullets):
+def check_events(settings, screen, ship, bullets):
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
             event.type == pygame.KEYDOWN and event.key == pygame.K_q
         ):
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(event, ai_settings, screen, ship, bullets)
+            check_keydown_events(event, settings, screen, ship, bullets)
         elif event.type == pygame.KEYUP:
             check_keyup_events(event, ship)
 
 
-def update_screen(ai_settings, screen, ship, aliens, bullets):
-    screen.fill(ai_settings.bg_color)
+def update_screen(settings, screen, ship, aliens, bullets):
+    screen.fill(settings.bg_color)
 
     for bullet in bullets.sprites():
         bullet.draw_bullet()
@@ -62,20 +62,29 @@ def update_bullets(bullets):
             bullets.remove(bullet)
 
 
-def fire_bullets(ai_settings, screen, ship, bullets):
-    if len(bullets) < ai_settings.bullet_max:
-        new_bullet = Bullet(ai_settings, screen, ship)
+def fire_bullets(settings, screen, ship, bullets):
+    if len(bullets) < settings.bullet_max:
+        new_bullet = Bullet(settings, screen, ship)
         bullets.add(new_bullet)
 
 
-def create_fleet(ai_settings, screen, aliens):
-    alien = Alien(ai_settings, screen)
-    alien_width = alien.rect.width
-    available_space = ai_settings.screen_width - alien_width * 2
+def get_number_aliens(settings, alien_width):
+    available_space = settings.screen_width - alien_width * 2
     number_of_aliens = int(available_space / (alien_width * 2))
+    return number_of_aliens
+
+
+def create_alien(settings, screen, aliens, alien_number):
+    alien = Alien(settings, screen)
+    alien_width = alien.rect.width
+    alien.x += alien_width * 2 * alien_number
+    alien.rect.x = int(alien.x)
+    aliens.add(alien)
+
+
+def create_fleet(settings, screen, aliens):
+    alien = Alien(settings, screen)
+    number_of_aliens = get_number_aliens(settings, alien.rect.width)
 
     for alien_number in range(number_of_aliens):
-        alien = Alien(ai_settings, screen)
-        alien.x += alien_width * 2 * alien_number
-        alien.rect.x = int(alien.x)
-        aliens.add(alien)
+        alien = create_alien(settings, screen, aliens, alien_number)
