@@ -1,6 +1,7 @@
 import sys
 import pygame
 
+from alien import Alien
 from bullet import Bullet
 
 
@@ -40,12 +41,13 @@ def check_events(ai_settings, screen, ship, bullets):
             check_keyup_events(event, ship)
 
 
-def update_screen(ai_settings, screen, ship, bullets):
+def update_screen(ai_settings, screen, ship, aliens, bullets):
     screen.fill(ai_settings.bg_color)
 
     for bullet in bullets.sprites():
         bullet.draw_bullet()
 
+    aliens.draw(screen)
     ship.blitme()
 
     # Make the most recently drawn screen visible
@@ -64,3 +66,16 @@ def fire_bullets(ai_settings, screen, ship, bullets):
     if len(bullets) < ai_settings.bullet_max:
         new_bullet = Bullet(ai_settings, screen, ship)
         bullets.add(new_bullet)
+
+
+def create_fleet(ai_settings, screen, aliens):
+    alien = Alien(ai_settings, screen)
+    alien_width = alien.rect.width
+    available_space = ai_settings.screen_width - alien_width * 2
+    number_of_aliens = int(available_space / (alien_width * 2))
+
+    for alien_number in range(number_of_aliens):
+        alien = Alien(ai_settings, screen)
+        alien.x += alien_width * 2 * alien_number
+        alien.rect.x = int(alien.x)
+        aliens.add(alien)

@@ -5,10 +5,8 @@ from pygame.sprite import Sprite
 class Bullet(Sprite):
     def __init__(self, ai_settings, screen, ship):
         super().__init__()
-        # super(Bullet, self).__init__()
-        self.screen = screen
 
-        # Cache frequently used settings
+        self.screen = screen
         self.settings = ai_settings
         self.color = self.settings.bullet_color
         self.width = self.settings.bullet_width
