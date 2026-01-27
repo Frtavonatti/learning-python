@@ -20,7 +20,15 @@ class Alien(Sprite):
         self.x = float(self.rect.x)
         self.y = float(self.rect.y)
 
-    # def update(self):
+    def check_edges(self):
+        if self.rect.right >= self.screen_rect.right:
+            return True
+        elif self.rect.left <= 0:
+            return True
+
+    def update(self):
+        self.x += self.settings.alien_speed_factor * self.settings.fleet_direction
+        self.rect.x = self.x
 
     def blitme(self):
         self.screen.blit(self.image, self.rect)
