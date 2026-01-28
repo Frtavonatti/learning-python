@@ -1,6 +1,6 @@
 import sys
-from typing import Self
 import pygame
+from time import sleep
 
 from alien import Alien
 from bullet import Bullet
@@ -56,13 +56,23 @@ def update_screen(settings, screen, ship, aliens, bullets):
     pygame.display.flip()
 
 
-# Delete bullets that are out of viewport
-def update_bullets(bullets):
+def update_bullets(settings, screen, bullets, aliens, stats):
     """Update the position of the bullets and get rid of old bullets"""
     bullets.update()
     for bullet in bullets.copy():
         if bullet.rect.bottom < 0:
             bullets.remove(bullet)
+    detect_bullet_alien_collision(settings, screen, aliens, bullets, stats)
+
+
+def detect_bullet_alien_collision(settings, screen, aliens, bullets, stats):
+    collision = pygame.sprite.groupcollide(bullets, aliens, True, True)
+    if collision:
+        stats.score += 1
+    if len(aliens) == 0:
+        bullets.empty()
+        sleep(2)  # momentarily here
+        create_fleet(settings, screen, aliens)
 
 
 def fire_bullets(settings, screen, ship, bullets):
@@ -125,7 +135,36 @@ def change_fleet_direction(settings, aliens):
     settings.fleet_direction *= -1
 
 
-def update_fleet(settings, aliens):
+def ship_hit(settings, screen, stats, ship, aliens, bullets):
+    if ship.ships_left > 0:
+        ship.ships_left -= 1
+
+        aliens.empty()
+        bullets.empty()
+
+        ship.restart_center()
+        create_fleet(settings, screen, aliens)
+        sleep(1)
+    else:
+        stats.active_game = False
+
+
+def check_alien_ship_collision(settings, screen, stats, ship, aliens, bullets):
+    if pygame.sprite.spritecollideany(ship, aliens):
+        ship_hit(settings, screen, stats, ship, aliens, bullets)
+
+
+def check_alien_reached_bottom(settings, screen, stats, ship, aliens, bullets):
+    screen_bottom = screen.get_rect().bottom
+    for alien in aliens.sprites():
+        if alien.rect.bottom >= screen_bottom:
+            ship_hit(settings, screen, stats, ship, aliens, bullets)
+            break
+
+
+def update_fleet(settings, screen, stats, ship, aliens, bullets):
     """Update fleet position on the screen"""
     check_fleet_edges(settings, aliens)
     aliens.update()
+    check_alien_ship_collision(settings, screen, stats, ship, aliens, bullets)
+    check_alien_reached_bottom(settings, screen, stats, ship, aliens, bullets)

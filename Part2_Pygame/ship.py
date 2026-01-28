@@ -1,5 +1,7 @@
 import pygame
 
+import settings
+
 
 class Ship:
     def __init__(self, ai_settings, screen):
@@ -29,6 +31,12 @@ class Ship:
         self.moving_left = False
         self.moving_up = False
         self.moving_down = False
+
+        self.ships_left = ai_settings.max_ships
+
+    def restart_center(self):
+        self.center_x = self.rect.centerx
+        self.center_y = self.screen_rect.bottom - self.margin
 
     def update(self):
         if (

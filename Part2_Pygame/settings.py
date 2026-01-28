@@ -7,6 +7,7 @@ class Settings:
         # Ship settings
         self.ship_speed_factor = 0.5
         self.ship_margin = 80  # Margin from screen edges
+        self.max_ships = 3
 
         # Bullet settings
         self.bullet_speed_factor = 0.5
@@ -20,3 +21,6 @@ class Settings:
         self.fleet_drop_speed = 5
         """fleet_direction of 1 represents right, -1 represents left."""
         self.fleet_direction = 1
+
+        # Testing values
+        # self.bullet_width = self.screen_width / 3
