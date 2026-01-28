@@ -71,7 +71,7 @@ def detect_bullet_alien_collision(settings, screen, aliens, bullets, stats):
         stats.score += 1
     if len(aliens) == 0:
         bullets.empty()
-        sleep(2)  # momentarily here
+        sleep(1)  # momentarily here
         create_fleet(settings, screen, aliens)
 
 
