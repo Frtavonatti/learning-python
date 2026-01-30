@@ -29,7 +29,7 @@ def run_game():
     ship.ships_left -= 1
 
     while True:
-        gf.check_events(ai_settings, screen, ship, bullets, stats, play_button)
+        gf.check_events(ai_settings, screen, ship, aliens, bullets, stats, play_button)
         gf.update_screen(ai_settings, screen, ship, aliens, bullets, stats, play_button)
 
         if stats.active_game:
