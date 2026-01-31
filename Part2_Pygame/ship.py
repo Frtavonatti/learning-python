@@ -1,16 +1,14 @@
 import pygame
 
-import settings
-
 
 class Ship:
-    def __init__(self, ai_settings, screen):
+    def __init__(self, settings, screen):
         self.screen = screen
-        self.ai_settings = ai_settings
+        self.settings = settings
 
         # Cache frequently used settings
-        self.speed = ai_settings.ship_speed_factor
-        self.margin = ai_settings.ship_margin
+        self.speed = settings.ship_speed_factor
+        self.margin = settings.ship_margin
 
         self.image = pygame.image.load("images/ship.bmp")
         self.image.set_colorkey((230, 230, 230))
@@ -32,7 +30,7 @@ class Ship:
         self.moving_up = False
         self.moving_down = False
 
-        self.ships_left = ai_settings.max_ships
+        self.ships_left = settings.max_ships
 
     def restart_center(self):
         self.center_x = self.rect.centerx

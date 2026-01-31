@@ -3,11 +3,11 @@ from pygame.sprite import Sprite
 
 
 class Bullet(Sprite):
-    def __init__(self, ai_settings, screen, ship):
+    def __init__(self, settings, screen, ship):
         super().__init__()
 
         self.screen = screen
-        self.settings = ai_settings
+        self.settings = settings
         self.color = self.settings.bullet_color
         self.width = self.settings.bullet_width
         self.heigth = self.settings.bullet_heigth

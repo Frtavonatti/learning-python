@@ -3,10 +3,10 @@ from pygame.sprite import Sprite
 
 
 class Alien(Sprite):
-    def __init__(self, ai_settings, screen):
+    def __init__(self, settings, screen):
         super().__init__()
         self.screen = screen
-        self.settings = ai_settings
+        self.settings = settings
 
         self.image = pygame.image.load("images/alien.bmp")
         self.image.set_colorkey((230, 230, 230))

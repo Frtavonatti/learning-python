@@ -5,7 +5,6 @@ from time import sleep
 
 from alien import Alien
 from bullet import Bullet
-import button
 
 
 def check_keydown_events(event, settings, screen, ship, bullets):
@@ -37,6 +36,7 @@ def check_play_button(
 ):
     button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
     if button_clicked and not stats.active_game:
+        settings.initialize_dynamic_settings()
         pygame.mouse.set_visible(False)
         # stats.reset_stats()
         ship.ships_left = settings.max_ships
@@ -100,6 +100,7 @@ def detect_bullet_alien_collision(settings, screen, aliens, bullets, stats):
         stats.score += 1
     if len(aliens) == 0:
         bullets.empty()
+        settings.increase_speed()
         sleep(1)  # momentarily here
         create_fleet(settings, screen, aliens)
 
