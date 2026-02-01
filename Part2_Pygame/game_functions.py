@@ -69,11 +69,12 @@ def check_events(settings, screen, ship, aliens, bullets, stats, play_button):
             check_keyup_events(event, ship)
 
 
-def update_screen(settings, screen, ship, aliens, bullets, stats, play_button):
+def update_screen(settings, screen, ship, aliens, bullets, stats, play_button, sb):
     """Update position of all elements on the screen"""
     screen.fill(settings.bg_color)
 
     if stats.active_game:
+        sb.draw_score()
         aliens.draw(screen)
         ship.blitme()
         for bullet in bullets.sprites():
@@ -85,19 +86,21 @@ def update_screen(settings, screen, ship, aliens, bullets, stats, play_button):
     pygame.display.flip()
 
 
-def update_bullets(settings, screen, bullets, aliens, stats):
+def update_bullets(settings, screen, bullets, aliens, stats, sb):
     """Update the position of the bullets and get rid of old bullets"""
     bullets.update()
     for bullet in bullets.copy():
         if bullet.rect.bottom < 0:
             bullets.remove(bullet)
-    detect_bullet_alien_collision(settings, screen, aliens, bullets, stats)
+    detect_bullet_alien_collision(settings, screen, aliens, bullets, stats, sb)
 
 
-def detect_bullet_alien_collision(settings, screen, aliens, bullets, stats):
+def detect_bullet_alien_collision(settings, screen, aliens, bullets, stats, sb):
     collision = pygame.sprite.groupcollide(bullets, aliens, True, True)
     if collision:
-        stats.score += 1
+        for alien in collision.values():
+            stats.score += settings.alien_points * len(alien)
+        sb.prep_score()
     if len(aliens) == 0:
         bullets.empty()
         settings.increase_speed()
