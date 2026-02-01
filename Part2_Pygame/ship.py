@@ -1,8 +1,10 @@
 import pygame
+from pygame.sprite import Sprite
 
 
-class Ship:
+class Ship(Sprite):
     def __init__(self, settings, screen):
+        super().__init__()
         self.screen = screen
         self.settings = settings
 
@@ -29,8 +31,6 @@ class Ship:
         self.moving_left = False
         self.moving_up = False
         self.moving_down = False
-
-        self.ships_left = settings.max_ships
 
     def restart_center(self):
         self.center_x = self.rect.centerx
