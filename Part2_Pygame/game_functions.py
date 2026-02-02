@@ -106,6 +106,7 @@ def update_bullets(settings, screen, bullets, aliens, stats, sb):
 def check_high_score(stats, sb):
     if stats.score > stats.max_score:
         stats.max_score = round(stats.score)
+        stats.write_max_score()
         sb.prep_max_score()
 
 
@@ -134,7 +135,8 @@ def fire_bullets(settings, screen, ship, bullets):
 
 def get_number_aliens(settings, alien_width):
     """Determine the number of aliens that fit the row"""
-    available_space = settings.screen_width - alien_width * 2
+    margin = alien_width * 4
+    available_space = settings.screen_width - alien_width * 2 - margin
     number_of_aliens = int(available_space / (alien_width * 2))
     return number_of_aliens
 

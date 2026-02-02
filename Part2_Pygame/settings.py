@@ -9,7 +9,7 @@ class Settings:
         self.max_ships = 3
 
         # Bullet settings
-        # self.bullet_width = 3
+        self.bullet_width = 3
         self.bullet_heigth = 15
         self.bullet_color = 230, 230, 230
         self.bullet_max = 3
@@ -23,12 +23,12 @@ class Settings:
         self.points_factor = 1.5
 
         # Testing values
-        self.bullet_width = self.screen_width / 3
+        # self.bullet_width = self.screen_width / 3
 
     def initialize_dynamic_settings(self):
         self.ship_speed_factor = 1
         self.bullet_speed_factor = 1
-        self.alien_speed_factor = 1
+        self.alien_speed_factor = 0.0
 
         """fleet_direction of 1 represents right, -1 represents left."""
         self.fleet_direction = 1
