@@ -10,6 +10,7 @@
       <li>
         <p>{{ entry.date_added }}</p>
         <p>{{ entry.text }}</p>
+        <a href="{% url 'learning_logs:edit_entry' entry.id %}">Edit entry</a>
       </li>
     {% empty %}
       <li>There are no entries for this topic yet</li>
