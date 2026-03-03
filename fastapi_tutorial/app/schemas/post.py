@@ -2,19 +2,19 @@ from pydantic import BaseModel
 
 
 class PostBase(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-    rating: int | None = None
+	title: str
+	content: str
+	published: bool = True
+	rating: int | None = None
 
 
 class PostCreate(PostBase):
-    pass
+	pass
 
 
 class PostUpdate(PostBase):
-    pass
+	pass
 
 
 class PostOut(PostBase):
-    id: int
+	id: int

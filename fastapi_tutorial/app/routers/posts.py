@@ -7,22 +7,24 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 mock_posts: list[dict] = [
     {
         "id": 1,
-        "title": "Primer post",
-        "content": "Bienvenido al tutorial de FastAPI para blog.",
+        "title": "First post",
+        "content": "Welcome to the FastAPI tutorial for blogs.",
         "published": True,
         "rating": 5,
     },
     {
         "id": 2,
-        "title": "Segundo post",
-        "content": "Este es otro blogpost usando mockdata.",
+        "title": "Second post",
+        "content": "This is another blog post using mock data.",
         "published": True,
         "rating": 4,
     },
 ]
 
 
-@router.get("/", response_model=list[schemas.PostOut])
+router.get("/", response_model=list[schemas.PostOut])
+
+
 async def get_posts() -> list[dict]:
     return mock_posts
 
