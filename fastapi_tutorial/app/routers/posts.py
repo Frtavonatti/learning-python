@@ -1,76 +1,72 @@
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Response, status, Depends
+from sqlalchemy.orm import Session
 
-from app import schemas
+from app import schemas, models
+from app.db.database import get_db
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
-mock_posts: list[dict] = [
-    {
-        "id": 1,
-        "title": "First post",
-        "content": "Welcome to the FastAPI tutorial for blogs.",
-        "published": True,
-        "rating": 5,
-    },
-    {
-        "id": 2,
-        "title": "Second post",
-        "content": "This is another blog post using mock data.",
-        "published": True,
-        "rating": 4,
-    },
-]
 
-
-router.get("/", response_model=list[schemas.PostOut])
-
-
-async def get_posts() -> list[dict]:
-    return mock_posts
+@router.get("/", response_model=list[schemas.PostOut])
+async def get_posts(db: Session = Depends(get_db)) -> list[models.Post]:
+    posts = db.query(models.Post).all()
+    return posts
 
 
 @router.get("/{post_id}", response_model=schemas.PostOut)
-async def get_post(post_id: int) -> dict:
-    for post in mock_posts:
-        if post["id"] == post_id:
-            return post
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Post with id {post_id} was not found",
-    )
+async def get_post(post_id: int, db: Session = Depends(get_db)) -> models.Post:
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with id {post_id} was not found",
+        )
+    
+    return post
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostOut)
-async def create_post(post: schemas.PostCreate) -> dict:
-    next_id = max((item["id"] for item in mock_posts), default=0) + 1
-    new_post = {"id": next_id, **post.model_dump()}
-    mock_posts.append(new_post)
+async def create_post(
+    post: schemas.PostCreate, db: Session = Depends(get_db)
+) -> models.Post:
+    new_post = models.Post(**post.model_dump())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
     return new_post
 
 
 @router.put("/{post_id}", response_model=schemas.PostOut)
-async def update_post(post_id: int, post: schemas.PostUpdate) -> dict:
-    for index, existing_post in enumerate(mock_posts):
-        if existing_post["id"] == post_id:
-            updated_post = {"id": post_id, **post.model_dump()}
-            mock_posts[index] = updated_post
-            return updated_post
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Post with id {post_id} was not found",
-    )
+async def update_post(
+    post_id: int, post_update: schemas.PostUpdate, db: Session = Depends(get_db)
+) -> models.Post:
+    post_query = db.query(models.Post).filter(models.Post.id == post_id)
+    post = post_query.first()
+    
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with id {post_id} was not found",
+        )
+    
+    post_query.update(post_update.model_dump(), synchronize_session=False)
+    db.commit()
+    db.refresh(post)
+    return post
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post(post_id: int) -> Response:
-    for index, post in enumerate(mock_posts):
-        if post["id"] == post_id:
-            del mock_posts[index]
-            return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Post with id {post_id} was not found",
-    )
+async def delete_post(post_id: int, db: Session = Depends(get_db)) -> Response:
+    post_query = db.query(models.Post).filter(models.Post.id == post_id)
+    post = post_query.first()
+    
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with id {post_id} was not found",
+        )
+    
+    post_query.delete(synchronize_session=False)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

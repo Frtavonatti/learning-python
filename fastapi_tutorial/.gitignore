@@ -1,2 +1,31 @@
+# Virtual environment
 venv/
+env/
+ENV/
+
+# Environment variables
 .env
+.env.*
+
+# Database
+database.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

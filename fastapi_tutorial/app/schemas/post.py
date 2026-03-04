@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime
 
 
 class PostBase(BaseModel):
@@ -18,3 +19,7 @@ class PostUpdate(PostBase):
 
 class PostOut(PostBase):
 	id: int
+	created_at: datetime | None = None
+	updated_at: datetime | None = None
+	
+	model_config = ConfigDict(from_attributes=True)
