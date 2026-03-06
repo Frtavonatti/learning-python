@@ -14,5 +14,6 @@ class User(Base):
     password = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    # Relationship with posts
-    posts = relationship("Post", back_populates="owner")
+    # Relationships
+    posts = relationship("Post", back_populates="owner", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="owner", cascade="all, delete-orphan")

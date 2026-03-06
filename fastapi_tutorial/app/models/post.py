@@ -19,5 +19,6 @@ class Post(Base):
     # Foreign key to User
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
-    # Relationship with User
+    # Relationships
     owner = relationship("User", back_populates="posts")
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
