@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import posts
-from app.db.database import engine
+from app.routers import posts, users
+from app.core.database import engine
 from app import models
 
 # Create database tables
@@ -33,6 +33,7 @@ async def root():
 
 
 app.include_router(posts.router)
+app.include_router(users.router)
 
 if "__name__" == "__main__":
     import uvicorn

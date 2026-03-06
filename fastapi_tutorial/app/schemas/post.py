@@ -10,7 +10,7 @@ class PostBase(BaseModel):
 
 
 class PostCreate(PostBase):
-	pass
+	owner_id: int
 
 
 class PostUpdate(PostBase):
@@ -19,6 +19,7 @@ class PostUpdate(PostBase):
 
 class PostOut(PostBase):
 	id: int
+	owner_id: int
 	created_at: datetime | None = None
 	updated_at: datetime | None = None
 	
