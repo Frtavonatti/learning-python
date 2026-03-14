@@ -1,4 +1,3 @@
-import secrets
 from typing import List
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
@@ -17,7 +16,7 @@ class Settings(BaseSettings):
         return v.split(",") if v else []
 
     # Security settings
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     ALGORITHM: str = "HS256"

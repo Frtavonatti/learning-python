@@ -3,11 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.routers import posts, users, comments
-from app.core.database import engine
-from app import models
 
-# Create database tables
-models.Base.metadata.create_all(bind=engine)
+# Note: Database migrations are now managed by Alembic
+# Run: alembic upgrade head
 
 app = FastAPI(
     title="Blog API - FastAPI Tutorial",
