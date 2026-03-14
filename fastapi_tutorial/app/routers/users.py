@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import schemas, models
 from app.core.database import get_db
+from app.core.security import hash_password
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -50,8 +51,11 @@ async def create_user(
             detail="Username already taken",
         )
 
-    # TODO: Hash password before saving (usar passlib o bcrypt)
-    new_user = models.User(**user.model_dump())
+    # Hash password before saving
+    user_data = user.model_dump()
+    user_data["hashed_password"] = hash_password(user_data.pop("password"))
+    
+    new_user = models.User(**user_data)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -73,6 +77,10 @@ async def update_user(
 
     # Filter out None values to only update provided fields
     update_data = user_update.model_dump(exclude_unset=True)
+    
+    # Hash password if being updated
+    if "password" in update_data:
+        update_data["hashed_password"] = hash_password(update_data.pop("password"))
 
     # Check email uniqueness if being updated
     if "email" in update_data:

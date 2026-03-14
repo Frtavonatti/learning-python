@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Response, status, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app import schemas, models
 from app.core.database import get_db
@@ -32,8 +33,15 @@ async def create_post(
 ) -> models.Post:
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
+    try:
+        db.commit()
+        db.refresh(new_post)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid owner_id or database constraint violation"
+        )
     return new_post
 
 
