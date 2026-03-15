@@ -16,3 +16,7 @@ class TokenPayload(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str]
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str

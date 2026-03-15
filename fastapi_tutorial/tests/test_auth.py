@@ -59,19 +59,86 @@ class TestLoginUser:
     register_url = "/auth/register"
 
     def test_login_user_success(self, client, sample_user_data):
-        """Test successful loging in"""
-        # First register the user
+        """Test successful login returns JWT tokens."""
         client.post(self.register_url, json=sample_user_data)
 
-        # Then try to login with email (not username)
         login_data = {
             "email": sample_user_data["email"],
-            "password": sample_user_data["password"]
+            "password": sample_user_data["password"],
         }
         response = client.post(self.login_url, json=login_data)
 
         assert response.status_code == 200
         data = response.json()
-        assert "message" in data
-        assert data["message"] == "Login successful"
-        assert "user_id" in data
+        assert "access_token" in data
+        assert "refresh_token" in data
+        assert data["token_type"] == "bearer"
+        assert isinstance(data["access_token"], str)
+        assert len(data["access_token"]) > 0
+
+    def test_login_user_not_found(self, client):
+        """Test login with non-existent user returns 404."""
+        response = client.post(
+            self.login_url,
+            json={"email": "noone@example.com", "password": "any"},
+        )
+        assert response.status_code == 404
+
+    def test_with_incorrect_password_fails(self, client, sample_user_data):
+        client.post(self.register_url, json=sample_user_data)
+
+        login_data = {
+            "email": sample_user_data["email"],
+            "password": "wrong_password",
+        }
+        response = client.post(self.login_url, json=login_data)
+
+        assert response.status_code == 401
+
+
+class TestRefreshToken:
+    """Tests for the refresh token endpoint."""
+
+    register_url = "/auth/register"
+    login_url = "/auth/login"
+    refresh_url = "/auth/refresh"
+
+    def _login(self, client, sample_user_data) -> dict:
+        client.post(self.register_url, json=sample_user_data)
+        response = client.post(
+            self.login_url,
+            json={
+                "email": sample_user_data["email"],
+                "password": sample_user_data["password"],
+            },
+        )
+        return response.json()
+
+    def test_refresh_returns_new_tokens(self, client, sample_user_data):
+        """Valid refresh token returns a new token pair."""
+        tokens = self._login(client, sample_user_data)
+        response = client.post(
+            self.refresh_url, json={"refresh_token": tokens["refresh_token"]}
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        assert "refresh_token" in data
+        assert data["token_type"] == "bearer"
+
+    def test_refresh_with_access_token_fails(self, client, sample_user_data):
+        """Sending an access token to /refresh must be rejected."""
+        tokens = self._login(client, sample_user_data)
+        response = client.post(
+            self.refresh_url, json={"refresh_token": tokens["access_token"]}
+        )
+
+        assert response.status_code == 401
+
+    def test_refresh_with_invalid_token_fails(self, client):
+        """Garbage token returns 401."""
+        response = client.post(
+            self.refresh_url, json={"refresh_token": "not.a.valid.token"}
+        )
+        assert response.status_code == 401
