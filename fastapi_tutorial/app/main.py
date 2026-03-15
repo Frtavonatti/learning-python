@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import posts, users, comments
+from app.routers import posts, users, comments, auth
 
 # Note: Database migrations are now managed by Alembic
 # Run: alembic upgrade head
@@ -30,6 +30,7 @@ async def root():
     return {"message": "Blog API running"}
 
 
+app.include_router(auth.router)
 app.include_router(posts.router)
 app.include_router(users.router)
 app.include_router(comments.router)

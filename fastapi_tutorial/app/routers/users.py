@@ -27,41 +27,6 @@ async def get_user(user_id: int, db: Session = Depends(get_db)) -> models.User:
     return user
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-async def create_user(
-    user: schemas.UserCreate, db: Session = Depends(get_db)
-) -> models.User:
-    # Check if email already exists
-    existing_user = (
-        db.query(models.User).filter(models.User.email == user.email).first()
-    )
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        )
-
-    # Check if username already exists
-    existing_username = (
-        db.query(models.User).filter(models.User.username == user.username).first()
-    )
-    if existing_username:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already taken",
-        )
-
-    # Hash password before saving
-    user_data = user.model_dump()
-    user_data["hashed_password"] = hash_password(user_data.pop("password"))
-    
-    new_user = models.User(**user_data)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
-
-
 @router.put("/{user_id}", response_model=schemas.UserOut)
 async def update_user(
     user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)
@@ -77,7 +42,7 @@ async def update_user(
 
     # Filter out None values to only update provided fields
     update_data = user_update.model_dump(exclude_unset=True)
-    
+
     # Hash password if being updated
     if "password" in update_data:
         update_data["hashed_password"] = hash_password(update_data.pop("password"))

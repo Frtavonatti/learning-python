@@ -83,7 +83,7 @@ def sample_user_data_2():
 @pytest.fixture
 def create_test_user(client, sample_user_data):
     """Create a test user and return the response."""
-    response = client.post("/users/", json=sample_user_data)
+    response = client.post("/auth/register", json=sample_user_data)
     assert response.status_code == 201
     return response.json()
 

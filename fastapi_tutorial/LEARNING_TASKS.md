@@ -6,16 +6,16 @@
 
 - [x] Install required packages:
         `python-jose[cryptography]`, `passlib[bcrypt]`, `python-multipart`
-- [ ] Create `app/core/security.py` with password hashing utilities (using bcrypt)
-- [ ] Create `app/core/auth.py` with JWT token creation and verification functions
-- [ ] Add JWT secret key and algorithm settings to `app/core/config.py`
-- [ ] Create `app/schemas/token.py` with Token and TokenData schemas
+- [x] Create `app/core/security.py` with password hashing utilities (using bcrypt)
+- [/] Create `app/core/auth.py` with JWT token creation and verification functions
+- [x] Add JWT secret key and algorithm settings to `app/core/config.py`
+- [x] Create `app/schemas/token.py` with Token and TokenData schemas
 
 ### Authentication Router
 
-- [ ] Create `app/routers/auth.py` with login endpoint
-- [ ] Implement POST `/auth/login` endpoint that returns JWT access token
-- [ ] Hash passwords before storing in database (update users router)
+- [x] Create `app/routers/auth.py` with login endpoint
+- [x] Implement POST `/auth/login` endpoint that returns JWT access token
+- [x] Hash passwords before storing in database (update users router)
 - [ ] Create OAuth2 password bearer dependency for protected routes
 - [ ] Add current user dependency function to validate JWT tokens
 
@@ -30,9 +30,9 @@
 
 ### Register Missing Routers
 
-- [ ] Include `users.router` in `app/main.py`
-- [ ] Include `comments.router` in `app/main.py`
-- [ ] Include `auth.router` in `app/main.py`
+- [x] Include `users.router` in `app/main.py`
+- [x] Include `comments.router` in `app/main.py`
+- [x] Include `auth.router` in `app/main.py`
 
 ## Phase 2: Advanced Features 🚀
 
@@ -83,12 +83,12 @@
 
 ### Unit Tests
 
-- [ ] Set up pytest and pytest-asyncio
-- [ ] Create `tests/conftest.py` with test database fixture
-- [ ] Write tests for user CRUD operations
-- [ ] Write tests for post CRUD operations
-- [ ] Write tests for comment CRUD operations
-- [ ] Write tests for authentication (login, token validation)
+- [x] Set up pytest and pytest-asyncio
+- [x] Create `tests/conftest.py` with test database fixture
+- [x] Write tests for user CRUD operations
+- [x] Write tests for post CRUD operations
+- [x] Write tests for comment CRUD operations
+- [x] Write tests for authentication (login, token validation)
 
 ### Integration Tests
 
