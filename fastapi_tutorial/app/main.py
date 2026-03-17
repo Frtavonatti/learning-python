@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import settings
-from app.routers import posts, users, comments, auth
+from app.routers import posts, users, comments, auth, oauth
 
 # Note: Database migrations are now managed by Alembic
 # Run: alembic upgrade head
@@ -23,6 +24,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 
 @app.get("/")
@@ -31,6 +33,7 @@ async def root():
 
 
 app.include_router(auth.router)
+app.include_router(oauth.router)
 app.include_router(posts.router)
 app.include_router(users.router)
 app.include_router(comments.router)
