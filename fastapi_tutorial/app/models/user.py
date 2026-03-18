@@ -15,12 +15,11 @@ class User(Base):
     roles = Column(JSON, default=list, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # OAuth fields
-    oauth_providers = Column(String, nullable=True)
-    oauth_provider_id = Column(String, nullable=True)
-
     # Relationships
     posts = relationship("Post", back_populates="owner", cascade="all, delete-orphan")
     comments = relationship(
         "Comment", back_populates="owner", cascade="all, delete-orphan"
+    )
+    oauth_accounts = relationship(
+        "OAuthAccount", back_populates="user", cascade="all, delete-orphan"
     )

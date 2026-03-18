@@ -110,15 +110,18 @@ class TestGithubOAuth:
         assert data["token_type"] == "bearer"
 
         # User should be persisted in DB
-        user = (
-            db_session.query(models.User)
-            .filter(models.User.oauth_provider_id == "123456")
+        oauth_account = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.provider == "github",
+                models.OAuthAccount.provider_user_id == "123456",
+            )
             .first()
         )
-        assert user is not None
+        assert oauth_account is not None
+        user = oauth_account.user
         assert user.email == "oauth@example.com"
         assert user.username == "githubuser"
-        assert user.oauth_providers == "github"
         assert user.hashed_password is None  # no local password
 
     # ------------------------------------------------------------------
@@ -133,13 +136,20 @@ class TestGithubOAuth:
             username="githubuser",
             hashed_password=None,
             roles=[],
-            oauth_providers="github",
-            oauth_provider_id="123456",
         )
         db_session.add(existing)
         db_session.commit()
         db_session.refresh(existing)
         user_id = existing.id
+
+        # Create OAuth account link
+        oauth_account = models.OAuthAccount(
+            user_id=existing.id,
+            provider="github",
+            provider_user_id="123456",
+        )
+        db_session.add(oauth_account)
+        db_session.commit()
 
         with (
             patch(
@@ -159,13 +169,16 @@ class TestGithubOAuth:
         assert "access_token" in data
 
         # No duplicate should be created
-        users = (
-            db_session.query(models.User)
-            .filter(models.User.oauth_provider_id == "123456")
+        oauth_accounts = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.provider == "github",
+                models.OAuthAccount.provider_user_id == "123456",
+            )
             .all()
         )
-        assert len(users) == 1
-        assert users[0].id == user_id
+        assert len(oauth_accounts) == 1
+        assert oauth_accounts[0].user_id == user_id
 
     # ------------------------------------------------------------------
     # Callback — links to existing local account with same email
@@ -182,8 +195,6 @@ class TestGithubOAuth:
             username="localuser",
             hashed_password=hash_password("localpass"),
             roles=["user"],
-            oauth_providers=None,
-            oauth_provider_id=None,
         )
         db_session.add(local_user)
         db_session.commit()
@@ -205,11 +216,17 @@ class TestGithubOAuth:
 
         assert response.status_code == 200
 
-        # Reload the user from DB
-        db_session.expire_all()
-        updated = db_session.query(models.User).filter(models.User.id == local_id).first()
-        assert updated.oauth_providers == "github"
-        assert updated.oauth_provider_id == "777"
+        # Check that OAuth account was created and linked
+        oauth_account = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.user_id == local_id,
+                models.OAuthAccount.provider == "github",
+            )
+            .first()
+        )
+        assert oauth_account is not None
+        assert oauth_account.provider_user_id == "777"
 
         # Still only one user with that email
         count = db_session.query(models.User).filter(models.User.email == "oauth@example.com").count()
@@ -249,12 +266,16 @@ class TestGithubOAuth:
 
         assert response.status_code == 200
 
-        new_user = (
-            db_session.query(models.User)
-            .filter(models.User.oauth_provider_id == "999")
+        oauth_account = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.provider == "github",
+                models.OAuthAccount.provider_user_id == "999",
+            )
             .first()
         )
-        assert new_user is not None
+        assert oauth_account is not None
+        new_user = oauth_account.user
         assert new_user.username == "githubuser_1"
 
     # ------------------------------------------------------------------
@@ -399,15 +420,18 @@ class TestGoogleOAuth:
         assert data["token_type"] == "bearer"
 
         # User should be persisted in DB
-        user = (
-            db_session.query(models.User)
-            .filter(models.User.oauth_provider_id == "987654321")
+        oauth_account = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.provider == "google",
+                models.OAuthAccount.provider_user_id == "987654321",
+            )
             .first()
         )
-        assert user is not None
+        assert oauth_account is not None
+        user = oauth_account.user
         assert user.email == "googleuser@example.com"
         assert user.username == "googleuser"  # Derived from name
-        assert user.oauth_providers == "google"
         assert user.hashed_password is None  # no local password
 
     # ------------------------------------------------------------------
@@ -422,13 +446,20 @@ class TestGoogleOAuth:
             username="googleuser",
             hashed_password=None,
             roles=[],
-            oauth_providers="google",
-            oauth_provider_id="987654321",
         )
         db_session.add(existing)
         db_session.commit()
         db_session.refresh(existing)
         user_id = existing.id
+
+        # Create OAuth account link
+        oauth_account = models.OAuthAccount(
+            user_id=existing.id,
+            provider="google",
+            provider_user_id="987654321",
+        )
+        db_session.add(oauth_account)
+        db_session.commit()
 
         with (
             patch(
@@ -451,13 +482,16 @@ class TestGoogleOAuth:
         assert "access_token" in data
 
         # No duplicate should be created
-        users = (
-            db_session.query(models.User)
-            .filter(models.User.oauth_provider_id == "987654321")
+        oauth_accounts = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.provider == "google",
+                models.OAuthAccount.provider_user_id == "987654321",
+            )
             .all()
         )
-        assert len(users) == 1
-        assert users[0].id == user_id
+        assert len(oauth_accounts) == 1
+        assert oauth_accounts[0].user_id == user_id
 
     # ------------------------------------------------------------------
     # Callback — links to existing local account with same email
@@ -474,8 +508,6 @@ class TestGoogleOAuth:
             username="localuser",
             hashed_password=hash_password("localpass"),
             roles=["user"],
-            oauth_providers=None,
-            oauth_provider_id=None,
         )
         db_session.add(local_user)
         db_session.commit()
@@ -500,11 +532,17 @@ class TestGoogleOAuth:
 
         assert response.status_code == 200
 
-        # Reload the user from DB
-        db_session.expire_all()
-        updated = db_session.query(models.User).filter(models.User.id == local_id).first()
-        assert updated.oauth_providers == "google"
-        assert updated.oauth_provider_id == "555555"
+        # Check that OAuth account was created and linked
+        oauth_account = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.user_id == local_id,
+                models.OAuthAccount.provider == "google",
+            )
+            .first()
+        )
+        assert oauth_account is not None
+        assert oauth_account.provider_user_id == "555555"
 
         # Still only one user with that email
         count = db_session.query(models.User).filter(models.User.email == "googleuser@example.com").count()
@@ -548,12 +586,16 @@ class TestGoogleOAuth:
 
         assert response.status_code == 200
 
-        new_user = (
-            db_session.query(models.User)
-            .filter(models.User.oauth_provider_id == "444444")
+        oauth_account = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.provider == "google",
+                models.OAuthAccount.provider_user_id == "444444",
+            )
             .first()
         )
-        assert new_user is not None
+        assert oauth_account is not None
+        new_user = oauth_account.user
         assert new_user.username == "googleuser_1"
 
     # ------------------------------------------------------------------
@@ -599,4 +641,188 @@ class TestGoogleOAuth:
 
         assert response.status_code == 400
         assert "email" in response.json()["detail"].lower()
+
+
+# ---------------------------------------------------------------------------
+# Multi-Provider Tests
+# ---------------------------------------------------------------------------
+
+class TestMultiProviderOAuth:
+    """Tests for linking multiple OAuth providers to one user."""
+
+    def test_user_can_link_both_github_and_google(self, client, db_session):
+        """
+        A user with an existing local account can link both GitHub and Google,
+        and login with either provider.
+        """
+        # Create a local user
+        local_user = models.User(
+            email="multiuser@example.com",
+            username="multiuser",
+            hashed_password=hash_password("localpass"),
+            roles=["user"],
+        )
+        db_session.add(local_user)
+        db_session.commit()
+        db_session.refresh(local_user)
+        user_id = local_user.id
+
+        # 1. Link GitHub
+        with (
+            patch(
+                "app.routers.oauth.oauth.github.authorize_access_token",
+                new_callable=AsyncMock,
+                return_value={"access_token": "gh_fake_token"},
+            ),
+            patch(
+                "app.routers.oauth.oauth.github.get",
+                side_effect=_make_get_side_effect(
+                    github_id=111111, login="multiuser"
+                ),
+            ),
+        ):
+            # Mock the email to match our local user
+            def custom_get_side_effect():
+                profile_resp = MagicMock()
+                profile_resp.json.return_value = {"id": 111111, "login": "multiuser"}
+
+                emails_resp = MagicMock()
+                emails_resp.json.return_value = [
+                    {"email": "multiuser@example.com", "primary": True, "verified": True}
+                ]
+
+                responses = iter([profile_resp, emails_resp])
+
+                async def _get(*args, **kwargs):
+                    return next(responses)
+
+                return _get
+
+            with patch(
+                "app.routers.oauth.oauth.github.get",
+                side_effect=custom_get_side_effect(),
+            ):
+                response = client.get("/auth/github/callback")
+
+        assert response.status_code == 200
+
+        # 2. Link Google to the same user
+        with (
+            patch(
+                "app.routers.oauth.oauth.google.authorize_access_token",
+                new_callable=AsyncMock,
+                return_value={"access_token": "google_fake_token"},
+            ),
+            patch(
+                "app.routers.oauth.oauth.google.get",
+                side_effect=_make_google_get_side_effect(
+                    google_id="222222",
+                    email="multiuser@example.com",
+                    name="Multi User",
+                ),
+            ),
+        ):
+            response = client.get("/auth/google/callback")
+
+        assert response.status_code == 200
+
+        # 3. Verify both OAuth accounts are linked to the same user
+        db_session.expire_all()
+        oauth_accounts = (
+            db_session.query(models.OAuthAccount)
+            .filter(models.OAuthAccount.user_id == user_id)
+            .all()
+        )
+
+        assert len(oauth_accounts) == 2
+        providers = {acc.provider for acc in oauth_accounts}
+        assert providers == {"github", "google"}
+
+        # 4. Verify both have correct provider IDs
+        github_account = next(acc for acc in oauth_accounts if acc.provider == "github")
+        google_account = next(acc for acc in oauth_accounts if acc.provider == "google")
+
+        assert github_account.provider_user_id == "111111"
+        assert google_account.provider_user_id == "222222"
+
+        # 5. Verify still only one user in the database with that email
+        user_count = (
+            db_session.query(models.User)
+            .filter(models.User.email == "multiuser@example.com")
+            .count()
+        )
+        assert user_count == 1
+
+    def test_user_cannot_link_same_provider_twice(self, client, db_session):
+        """
+        A user cannot link the same OAuth provider (GitHub) twice.
+        The unique constraint should prevent this.
+        """
+        # Create a user with GitHub already linked
+        user = models.User(
+            email="test@example.com",
+            username="testuser",
+            hashed_password=None,
+            roles=[],
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+
+        oauth_account = models.OAuthAccount(
+            user_id=user.id,
+            provider="github",
+            provider_user_id="12345",
+        )
+        db_session.add(oauth_account)
+        db_session.commit()
+
+        # Try to login again with the same GitHub account
+        with (
+            patch(
+                "app.routers.oauth.oauth.github.authorize_access_token",
+                new_callable=AsyncMock,
+                return_value={"access_token": "gh_fake_token"},
+            ),
+            patch(
+                "app.routers.oauth.oauth.github.get",
+                side_effect=_make_get_side_effect(github_id=12345, login="testuser"),
+            ),
+        ):
+            # Should succeed without creating duplicate
+            def custom_get_side_effect():
+                profile_resp = MagicMock()
+                profile_resp.json.return_value = {"id": 12345, "login": "testuser"}
+
+                emails_resp = MagicMock()
+                emails_resp.json.return_value = [
+                    {"email": "test@example.com", "primary": True, "verified": True}
+                ]
+
+                responses = iter([profile_resp, emails_resp])
+
+                async def _get(*args, **kwargs):
+                    return next(responses)
+
+                return _get
+
+            with patch(
+                "app.routers.oauth.oauth.github.get",
+                side_effect=custom_get_side_effect(),
+            ):
+                response = client.get("/auth/github/callback")
+
+        assert response.status_code == 200
+
+        # Verify still only one OAuth account
+        oauth_count = (
+            db_session.query(models.OAuthAccount)
+            .filter(
+                models.OAuthAccount.user_id == user.id,
+                models.OAuthAccount.provider == "github",
+            )
+            .count()
+        )
+        assert oauth_count == 1
+
 

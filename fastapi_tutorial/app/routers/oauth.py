@@ -70,20 +70,20 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
 
     provider_id = str(github_user["id"])
 
-    # Look up existing OAuth user
-    user = db.query(models.User).filter(
-        models.User.oauth_providers == "github",
-        models.User.oauth_provider_id == provider_id,
+    # Look up existing OAuth account
+    oauth_account = db.query(models.OAuthAccount).filter(
+        models.OAuthAccount.provider == "github",
+        models.OAuthAccount.provider_user_id == provider_id,
     ).first()
 
-    if not user:
-        # Check if the email is already registered (local account)
+    if oauth_account:
+        # OAuth account exists, return tokens for that user
+        user = oauth_account.user
+    else:
+        # Check if the email is already registered (local account or different OAuth)
         user = db.query(models.User).filter(models.User.email == primary_email).first()
-        if user:
-            # Link OAuth to existing account
-            user.oauth_providers = "github"
-            user.oauth_provider_id = provider_id
-        else:
+        
+        if not user:
             # Create a new user from GitHub profile
             base_username = github_user.get("login", f"github_{provider_id}")
             username = base_username
@@ -97,11 +97,17 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
                 username=username,
                 hashed_password=None,
                 roles=[],
-                oauth_providers="github",
-                oauth_provider_id=provider_id,
             )
             db.add(user)
+            db.flush()  # Get user.id before creating oauth_account
 
+        # Link OAuth provider to user (works for both new and existing users)
+        oauth_account = models.OAuthAccount(
+            user_id=user.id,
+            provider="github",
+            provider_user_id=provider_id,
+        )
+        db.add(oauth_account)
         db.commit()
         db.refresh(user)
 
@@ -146,20 +152,20 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
     provider_id = str(google_user["id"])
 
-    # Look up existing OAuth user
-    user = db.query(models.User).filter(
-        models.User.oauth_providers == "google",
-        models.User.oauth_provider_id == provider_id,
+    # Look up existing OAuth account
+    oauth_account = db.query(models.OAuthAccount).filter(
+        models.OAuthAccount.provider == "google",
+        models.OAuthAccount.provider_user_id == provider_id,
     ).first()
 
-    if not user:
-        # Check if the email is already registered (local account)
+    if oauth_account:
+        # OAuth account exists, return tokens for that user
+        user = oauth_account.user
+    else:
+        # Check if the email is already registered (local account or different OAuth)
         user = db.query(models.User).filter(models.User.email == email).first()
-        if user:
-            # Link OAuth to existing account
-            user.oauth_providers = "google"
-            user.oauth_provider_id = provider_id
-        else:
+        
+        if not user:
             # Create a new user from Google profile
             # Use the part before @ as base username
             base_username = google_user.get("name", email.split("@")[0]).replace(" ", "").lower()
@@ -174,11 +180,17 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
                 username=username,
                 hashed_password=None,
                 roles=[],
-                oauth_providers="google",
-                oauth_provider_id=provider_id,
             )
             db.add(user)
+            db.flush()  # Get user.id before creating oauth_account
 
+        # Link OAuth provider to user (works for both new and existing users)
+        oauth_account = models.OAuthAccount(
+            user_id=user.id,
+            provider="google",
+            provider_user_id=provider_id,
+        )
+        db.add(oauth_account)
         db.commit()
         db.refresh(user)
 
