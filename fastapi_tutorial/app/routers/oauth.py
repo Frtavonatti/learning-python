@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.auth.jwt_handler import create_access_token, create_refresh_token
-from app import models, schemas
+from app import schemas
+from app.services.oauth_service import OAuthUserService
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["OAuth"])
 
@@ -69,56 +70,20 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
         )
 
     provider_id = str(github_user["id"])
+    base_username = github_user.get("login", f"github_{provider_id}")
 
-    # Look up existing OAuth account
-    oauth_account = db.query(models.OAuthAccount).filter(
-        models.OAuthAccount.provider == "github",
-        models.OAuthAccount.provider_user_id == provider_id,
-    ).first()
-
-    if oauth_account:
-        # OAuth account exists, return tokens for that user
-        user = oauth_account.user
-    else:
-        # Check if the email is already registered (local account or different OAuth)
-        user = db.query(models.User).filter(models.User.email == primary_email).first()
-        
-        if not user:
-            # Create a new user from GitHub profile
-            base_username = github_user.get("login", f"github_{provider_id}")
-            username = base_username
-            suffix = 1
-            while db.query(models.User).filter(models.User.username == username).first():
-                username = f"{base_username}_{suffix}"
-                suffix += 1
-
-            user = models.User(
-                email=primary_email,
-                username=username,
-                hashed_password=None,
-                roles=[],
-            )
-            db.add(user)
-            db.flush()  # Get user.id before creating oauth_account
-
-        # Link OAuth provider to user (works for both new and existing users)
-        oauth_account = models.OAuthAccount(
-            user_id=user.id,
-            provider="github",
-            provider_user_id=provider_id,
-        )
-        db.add(oauth_account)
-        db.commit()
-        db.refresh(user)
-
-    access_token = create_access_token(subject=str(user.id), roles=user.roles)
-    refresh_token = create_refresh_token(subject=str(user.id))
-
-    return schemas.Token(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="bearer",
+    # Delegate business logic to service
+    oauth_service = OAuthUserService(db)
+    user = oauth_service.get_or_create_user(
+        provider="github",
+        provider_user_id=provider_id,
+        email=primary_email,
+        base_username=base_username,
     )
+
+    # Generate tokens
+    auth_service = AuthService(db)
+    return auth_service.create_tokens(user)
 
 
 @router.get("/google")
@@ -151,54 +116,19 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         )
 
     provider_id = str(google_user["id"])
-
-    # Look up existing OAuth account
-    oauth_account = db.query(models.OAuthAccount).filter(
-        models.OAuthAccount.provider == "google",
-        models.OAuthAccount.provider_user_id == provider_id,
-    ).first()
-
-    if oauth_account:
-        # OAuth account exists, return tokens for that user
-        user = oauth_account.user
-    else:
-        # Check if the email is already registered (local account or different OAuth)
-        user = db.query(models.User).filter(models.User.email == email).first()
-        
-        if not user:
-            # Create a new user from Google profile
-            # Use the part before @ as base username
-            base_username = google_user.get("name", email.split("@")[0]).replace(" ", "").lower()
-            username = base_username
-            suffix = 1
-            while db.query(models.User).filter(models.User.username == username).first():
-                username = f"{base_username}_{suffix}"
-                suffix += 1
-
-            user = models.User(
-                email=email,
-                username=username,
-                hashed_password=None,
-                roles=[],
-            )
-            db.add(user)
-            db.flush()  # Get user.id before creating oauth_account
-
-        # Link OAuth provider to user (works for both new and existing users)
-        oauth_account = models.OAuthAccount(
-            user_id=user.id,
-            provider="google",
-            provider_user_id=provider_id,
-        )
-        db.add(oauth_account)
-        db.commit()
-        db.refresh(user)
-
-    access_token = create_access_token(subject=str(user.id), roles=user.roles)
-    refresh_token = create_refresh_token(subject=str(user.id))
-
-    return schemas.Token(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="bearer",
+    base_username = (
+        google_user.get("name", email.split("@")[0]).replace(" ", "").lower()
     )
+
+    # Delegate business logic to service
+    oauth_service = OAuthUserService(db)
+    user = oauth_service.get_or_create_user(
+        provider="google",
+        provider_user_id=provider_id,
+        email=email,
+        base_username=base_username,
+    )
+
+    # Generate tokens
+    auth_service = AuthService(db)
+    return auth_service.create_tokens(user)
