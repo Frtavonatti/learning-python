@@ -15,10 +15,7 @@ class OAuthRepository:
         """Get OAuth account by provider and provider_user_id"""
         return (
             self.db.query(models.OAuthAccount)
-            .filter(
-                models.OAuthAccount.provider == provider,
-                models.OAuthAccount.provider_user_id == provider_user_id,
-            )
+            .filter_by(provider=provider, provider_user_id=provider_user_id)
             .first()
         )
 
